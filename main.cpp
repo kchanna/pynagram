@@ -18,7 +18,7 @@ struct Anagram
     int         r;
     int         nPr;
 
-    std::chrono::high_resolution_clock::time_point      start_time;
+    std::chrono::high_resolution_clock::time_point      start_time, end_time;
 
     std::vector<std::string>    theStrings;
 
@@ -39,6 +39,8 @@ inline void swap(char *x, char *y)
     *x = *y;
     *y = temp;
 }
+
+#define DO_SWAP(xx,yy)  {   char temp; temp = (*(xx));  (*(xx)) = (*(yy));   (*(yy)) = temp;  }
 
 int g_found = 0;
 
@@ -67,14 +69,21 @@ void permute(const int theIndex, char *a, int n, int l, int r, int depth)
         {
 	        // do the swap
 	        //printf("DEBUG: swapping l = %d, i = %d\n", l, i);
-            swap((a+l), (a+i));
+            //swap((a+l), (a+i));
+            DO_SWAP((a+l), (a+i));
 
             permute(theIndex, a, n, l+1, r, depth+1);
 
 	        // undo the swap
 	        //printf("DEBUG: swapping l = %d, i = %d\n", l, i);
-            swap((a+l), (a+i)); //backtrack
+            //swap((a+l), (a+i)); //backtrack
+            DO_SWAP((a+l), (a+i)); //backtrack
         }
+    }
+
+    if(0 == depth)
+    {
+        g_anagramData[theIndex].end_time = std::chrono::high_resolution_clock::now();
     }
 }
 
@@ -117,6 +126,33 @@ static int factorial(int number) {
     return temp;
 }
 
+
+bool canCreateNewThreads(const std::future<void>* threads, int nMaxIndex)
+{
+    int     i, nRunning = 0;
+    const int nMaxThreadsToRunAtOnce = 4;
+
+    for(i=0;i<nMaxIndex;i++)
+    {
+        auto ret = threads[i].wait_for(std::chrono::milliseconds(100));
+        if(std::future_status::ready != ret)
+        {
+            nRunning++;
+
+            if(nRunning > nMaxThreadsToRunAtOnce) {
+                break;  // No need to check further...
+            }
+        }
+    }
+
+    // Run a maximum of "n" threads at a time..
+    if(nRunning > nMaxThreadsToRunAtOnce) {
+        return false;
+    }
+
+    return true;
+}
+
 void formWords(const char* in_str, int slen)
 {
     auto                t1 = std::chrono::high_resolution_clock::now();
@@ -135,6 +171,17 @@ void formWords(const char* in_str, int slen)
         char* str = new char[slen+1];
         strcpy(str, in_str);
         threads[iLen-1] = std::async(std::launch::async, permute, iLen-1, str, slen, 0, iLen, 0);
+
+        while(true) {
+            if(!canCreateNewThreads(threads, iLen-1))
+            {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+            else
+            {
+                break;
+            }
+        }
     }
 
     iLen = 0;
@@ -144,8 +191,7 @@ void formWords(const char* in_str, int slen)
 
         threads[iLen-1].get();
 
-        auto t2 = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - g_anagramData[iLen - 1].start_time);
+        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(g_anagramData[iLen - 1].end_time - g_anagramData[iLen - 1].start_time);
 
         std::cout << "Time taken for generating words of (nPr) " << slen << "P" << iLen << " of " <<
                 g_anagramData[iLen - 1].nPr << " words, is " << time_span.count() << " seconds" << std::endl;

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include <ostream>
 #include <iostream>
@@ -13,18 +14,22 @@
 #include <ratio>
 #include <chrono>
 
+#include "dictionary.h"
+
 struct Anagram
 {
-    int         r;
-    int         nPr;
+    int           r;
+    uint64_t      nPr;
 
     std::chrono::high_resolution_clock::time_point      start_time, end_time;
+		bool        bPrintedDuration;
 
     std::vector<std::string>    theStrings;
 
     Anagram()
     {
-        r = nPr = -1;
+	    r = nPr = -1;
+	    bPrintedDuration = false;
     }
 };
 
@@ -61,7 +66,7 @@ void permute(const int theIndex, char *a, int n, int l, int r, int depth)
 	    strncpy(szCopy, a, r);
 	    szCopy[r] = 0;
 	    //printf("%d. %s\n", ++g_found, szCopy);
-        g_anagramData[theIndex].theStrings.push_back(szCopy);
+        //g_anagramData[theIndex].theStrings.push_back(szCopy);
     }
     else
     {
@@ -117,113 +122,139 @@ void prepareString(char* in_str, int str_len)
     }
 }
 
-static int factorial(int number) {
-    int temp;
+static uint64_t factorial(uint64_t number) {
+	uint64_t temp;
 
-    if(number <= 1) return 1;
+	if(number <= 1) return 1;
 
-    temp = number * factorial(number - 1);
-    return temp;
+	temp = number * factorial(number - 1);
+	return temp;
 }
 
 
-bool canCreateNewThreads(const std::future<void>* threads, int nMaxIndex)
+bool canCreateNewThreads(const std::future<void>* threads, int nMaxIndex, int npr_N)
 {
-    int     i, nRunning = 0;
-    const int nMaxThreadsToRunAtOnce = 4;
+	int     i, nRunning = 0;
+	const int nMaxThreadsToRunAtOnce = 4;
 
-    for(i=0;i<nMaxIndex;i++)
-    {
-        auto ret = threads[i].wait_for(std::chrono::milliseconds(100));
-        if(std::future_status::ready != ret)
-        {
-            nRunning++;
+	for(i=0;i<nMaxIndex;i++)
+	{
+		auto ret = threads[i].wait_for(std::chrono::milliseconds(100));
+		if(std::future_status::ready == ret)
+		{
+			if(!g_anagramData[i].bPrintedDuration)
+			{
+				g_anagramData[i].bPrintedDuration = true;
 
-            if(nRunning > nMaxThreadsToRunAtOnce) {
-                break;  // No need to check further...
-            }
-        }
-    }
+				std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(g_anagramData[i].end_time - g_anagramData[i].start_time);
 
-    // Run a maximum of "n" threads at a time..
-    if(nRunning > nMaxThreadsToRunAtOnce) {
-        return false;
-    }
+				std::cout << "Time taken for generating words of (nPr) " << npr_N << "P" << g_anagramData[i].r << " of " <<
+				g_anagramData[i].nPr << " words, is " << time_span.count() << " seconds" << std::endl;
+			}
+		}
+		else
+		{
+			nRunning++;
 
-    return true;
+			if(nRunning > nMaxThreadsToRunAtOnce) {
+				break;  // No need to check further...
+			}
+		}
+	}
+
+	// Run a maximum of "n" threads at a time..
+	if(nRunning > nMaxThreadsToRunAtOnce) {
+		return false;
+	}
+
+	return true;
 }
 
 void formWords(const char* in_str, int slen)
 {
-    auto                t1 = std::chrono::high_resolution_clock::now();
-    int                 iLen = 0;
-    std::future<void>*  threads = new std::future<void>[slen + 1];
+	auto                t1 = std::chrono::high_resolution_clock::now();
+	int                 iLen = 0;
+	std::future<void>*  threads = new std::future<void>[slen + 1];
 
-    while(iLen < slen)
-    {
-        iLen++;
+	while(iLen < slen)
+	{
+		iLen++;
 
-        g_anagramData[iLen - 1].r = iLen;
-        g_anagramData[iLen - 1].nPr = factorial(slen) / factorial(slen - iLen);
+		g_anagramData[iLen - 1].r = iLen;
+		g_anagramData[iLen - 1].nPr = factorial(slen) / factorial(slen - iLen);
 
-        g_anagramData[iLen - 1].start_time = std::chrono::high_resolution_clock::now();
+		g_anagramData[iLen - 1].start_time = std::chrono::high_resolution_clock::now();
+		g_anagramData[iLen - 1].r = iLen;
 
-        char* str = new char[slen+1];
-        strcpy(str, in_str);
-        threads[iLen-1] = std::async(std::launch::async, permute, iLen-1, str, slen, 0, iLen, 0);
+		char* str = new char[slen+1];
+		strcpy(str, in_str);
+		threads[iLen-1] = std::async(std::launch::async, permute, iLen-1, str, slen, 0, iLen, 0);
 
-        while(true) {
-            if(!canCreateNewThreads(threads, iLen-1))
-            {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
+		while(true) {
+			if(!canCreateNewThreads(threads, iLen-1, slen))
+			{
+				int nd = slen - iLen;
+				int nSleep = 1;     // seconds
 
-    iLen = 0;
-    while(iLen < slen)
-    {
-        iLen++;
+				if(nd > 15) nSleep = 20;
+				else if(nd > 10) nSleep = 15;
+				else if(nd > 8) nSleep = 12;
+				else if(nd > 5) nSleep = 10;
+				else if(nd > 3) nSleep = 5;
 
-        threads[iLen-1].get();
+				std::this_thread::sleep_for(std::chrono::seconds(nSleep));
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
 
-        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(g_anagramData[iLen - 1].end_time - g_anagramData[iLen - 1].start_time);
+	iLen = 0;
+	while(iLen < slen)
+	{
+		iLen++;
 
-        std::cout << "Time taken for generating words of (nPr) " << slen << "P" << iLen << " of " <<
-                g_anagramData[iLen - 1].nPr << " words, is " << time_span.count() << " seconds" << std::endl;
-    }
+		threads[iLen-1].get();
 
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+		//std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(g_anagramData[iLen - 1].end_time - g_anagramData[iLen - 1].start_time);
+		//std::cout << "Time taken for generating words of (nPr) " << slen << "P" << iLen << " of " <<
+		//g_anagramData[iLen - 1].nPr << " words, is " << time_span.count() << " seconds" << std::endl;
+	}
 
-    std::cout << std::endl << "      Total Time taken for generating all words is " << time_span.count() << " seconds" << std::endl;
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+
+	std::cout << std::endl << "      Total Time taken for generating all words is " << time_span.count() << " seconds" << std::endl;
 }
 
 
 /* Driver program to test above functions */
 int main()
 {
-    char str[] = "ABCD__*&EFGH345IJK";
-    //char str[] = "ABCDEFG";
-    int n = strlen(str);
+	if(0 != processDictionary("wordsEn.txt")) {
+		std::cout << "Failed to process dictionary" << std::endl;
+		return -100;
+	}
 
-    std::cout << "String before preparing: " << str << std::endl;
-    prepareString(str, n);
-    std::cout << "String after preparing: " << str << std::endl;
-    n = strlen(str);
+  char str[] = "ABCD__*&EFGH345IJKlmnopqrstuv";
+  //char str[] = "ABCDEFG";
+  int n = strlen(str);
 
-    g_anagramData = new Anagram[n+1];
+  std::cout << "String before preparing: " << str << std::endl;
+  prepareString(str, n);
+  std::cout << "String after preparing: " << str << std::endl;
+  n = strlen(str);
+
+  g_anagramData = new Anagram[n+1];
 
 
 
-    formWords(str, n);
+  formWords(str, n);
 
 
 
-    //permute(str, n, 0, 3, 0);
-    return 0;
+  //permute(str, n, 0, 3, 0);
+  return 0;
 }

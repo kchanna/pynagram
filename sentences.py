@@ -4,18 +4,6 @@ import itertools
 
 theOrgStringHash = {}
 
-# If you pass the word, it'll tell you if this word can be used in the current sentence
-def isWordAllowedInSentence(word, args):
-    global theOrgStringHash
-
-    for l in word:
-        lCount = theOrgStringHash.get(str(l))
-        if (lCount is None) | (lCount <= 0):
-            return False
-        else:
-            theOrgStringHash[str(l)] = lCount - 1
-
-    return True
 
 
 # Returns if the base word + remaining letters can form a possible word.
@@ -38,6 +26,7 @@ def isSentenceAllowedEx(originalStringLength, input, startIndex, length, args):
             return True
 
     return False
+# ----------------------------------------------------
 
 # If you pass the word, it'll tell you if this word can be used in the current sentence
 def isSentenceAllowed(originalStringLength, sentence, args):
@@ -72,21 +61,7 @@ def isSentenceAllowed(originalStringLength, sentence, args):
                 return False
 
     return True
-
-def formSentencesInternalNotUsed(args):
-    theSentence = ""
-
-    for outer in theWords:
-        for inner in theWords[outer]:
-            print(str(inner))
-            formSentencesInternal()
-
-    if isWordAllowedInSentence(str(inner), args):
-        theSentence += inner + " "
-
-
-    return theSentence
-
+# ----------------------------------------------------
 
 
 # Reset
@@ -145,25 +120,7 @@ def formSentences(orgString, theWords, args):
     logSentences(allSentences, args)
 
     return
-
-    awLen = len(allWords)
-    outer = 0
-    inner = 0
-
-    while outer < awLen-1:
-        resetSentences(allWords)
-        theSentence = allWords[outer] + " "
-        inner = outer + 1
-
-        while inner < awLen:
-            aW = str(allWords[inner])
-            if isWordAllowedInSentence(aW, args):
-                theSentence += (aW + " ")
-
-            inner = inner + 1
-
-        outer = outer + 1
-        print(str(theSentence))
+# ----------------------------------------------------
 
 
 
@@ -187,7 +144,7 @@ def formSentencesInternal(orgString, allWords, args):
         allSentences[str(iLen)] = getSentencesCombination(orgString, allWords, slen, iLen, args)
 
     return allSentences
-
+# ----------------------------------------------------
 
 # Driver function to generate the strings...
 def getSentencesCombination(orgString, allWords, n, r, args):
@@ -200,6 +157,7 @@ def getSentencesCombination(orgString, allWords, n, r, args):
     ret_data = permuteForSentences(len(orgString), ret_data, in_str, n, 0, r, 0, args)
 
     return ret_data
+# ----------------------------------------------------
 
 # Function to print permutations of string
     # saved_words --> the saved words array
@@ -243,7 +201,4 @@ def permuteForSentences(originalStringLength, saved_sentences, in_str, n, l, r, 
             in_str[i] = tmp
 
     return saved_sentences
-
-
-
-
+# ----------------------------------------------------

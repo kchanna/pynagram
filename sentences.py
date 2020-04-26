@@ -1,7 +1,7 @@
 from dictionary import *
 import logging
 import itertools
-
+from combination import *
 theOrgStringHash = {}
 
 
@@ -88,6 +88,19 @@ def logSentences(s, args):
     logging.info(" --------- ")
 # ----------------------------------------------------
 
+
+def flattenWords(theWords, args):
+    allWords = []
+
+    outer = len(theWords) - 1
+    while outer > 0:
+        for inner in theWords[str(outer)]:
+            allWords.append(inner)
+
+        outer = outer - 1
+
+    return allWords;
+
 # Takes all the words and tries to form sentences.
 def formSentences(orgString, theWords, args):
     allWords = []
@@ -115,6 +128,8 @@ def formSentences(orgString, theWords, args):
     #         n_s = n_s + s + " "
     #     if isSentenceAllowed(len(orgString), n_s, args):
     #         print(n_s)
+
+    genCombinations(16, 4)
 
     allSentences = formSentencesInternal2(orgString, allWords, args)
     logSentences(allSentences, args)

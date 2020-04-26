@@ -122,6 +122,31 @@ def formSentences(orgString, theWords, args):
     return
 # ----------------------------------------------------
 
+def formSentencesInternal2(orgString, allWords, args):
+    allSentences = {}
+    slen = len(allWords)
+
+    counts = args.wordCount.split(',')
+    if len(counts) <= 0:
+        logging.error("Invalid word count to form sentences. Exiting....")
+        exit(-55)
+
+    for ii in counts:
+        iLen = int(ii)
+        r1 = math.factorial(slen) / math.factorial(slen - iLen)
+        # logging.info("No. of combinations: Total length = %d, Current length = %d, Total = %d" % (slen, iLen, r1))
+
+        for subset in itertools.combinations(allWords, iLen):
+            n_s = ""
+            for s in subset:
+                n_s = n_s + s + " "
+            if isSentenceAllowed(len(orgString), n_s, args):
+                allSentences[ii].append(n_s)
+
+    return allSentences
+# ----------------------------------------------------
+
+
 
 
 def formSentencesInternal(orgString, allWords, args):

@@ -3,6 +3,7 @@ import datetime
 import platform, os, sys, subprocess
 import argparse
 from dictionary import *
+from sentences import *
 import logging
 
 
@@ -10,8 +11,10 @@ import logging
 parser = argparse.ArgumentParser(
     description='Script to generate anagrams from a given string.')
 
-parser.add_argument('string', type=str, help='The original string, from which anagram is formed.')
+parser.add_argument('--string', type=str, help='The original string, from which anagram is formed.')
 parser.add_argument('--verbose', action='store_true', help='[Optional] The verbose log flag... to debug issues.')
+parser.add_argument('--dict', type=str, default="brown", help='[Optional] The dictionary to use.')
+parser.add_argument('--wordCount', type=str, default="4,5", help='[Optional] The number of words to use in a sentence.')
 #parser.add_argument('-h', '--help', help='[Optional] Show options and exit', required=False)
 
 
@@ -49,15 +52,6 @@ def prepareString(in_str):
     return ret_str
 
 
-prepareWordList();
-
-logging.info("Incoming string:" + str(args.string))
-args.nstring = prepareString(args.string)
-logging.info("Prepared string:" + str(args.nstring))
-
-total_words_formed = 0
-
-
 def formWords(in_str):
     all_words = { }
     slen = len(in_str)
@@ -65,6 +59,8 @@ def formWords(in_str):
     while(iLen < slen):
         iLen += 1
         r1 = math.factorial(slen) / math.factorial(slen - iLen)
+        logging.info("No. of combinations: Total length = %d, Current length = %d, Total = %d" % (slen, iLen, r1))
+
         args.combinations[str(iLen)] = int(round(r1))
         all_words[str(iLen)] = getWordsCombination(in_str, slen, iLen)
 
@@ -149,5 +145,20 @@ def getWordsCombination(in_string, n, r):
     return ret_data
 
 
+# ----------------------------------------------------
+
+
+
+initDictionary(args);
+prepareWordList();
+
+logging.info("Incoming string:" + str(args.string))
+args.nstring = prepareString(args.string)
+logging.info("Prepared string:" + str(args.nstring))
+
+total_words_formed = 0
+
 args.words = formWords(args.nstring)
 logging.info("Words = " + str(args.words))
+
+formSentences(args.nstring, args.words, args)

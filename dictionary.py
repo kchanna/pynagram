@@ -13,6 +13,12 @@ MAX_WORD_LENGTH_FOR_HASH = 12
 USE_WHICH_DICTIONARY = "brown"    # Possible values: wordnet_syn (synsets), words, brown
 
 
+def initDictionary(args):
+    global USE_WHICH_DICTIONARY
+
+    USE_WHICH_DICTIONARY = args.dict
+# ----------------------------------------------------
+
 # Processes the "theWord" and adds the range of characters into the hash map
 def prepareWordHashList(theWord):
     global wordsHashSet
@@ -39,7 +45,7 @@ def prepareWordHashList(theWord):
         retC = retC + 1
 
     return retC;
-
+# ----------------------------------------------------
 
 # Prepares the word list, basically preprocess it.
 def prepareWordList_Words():
@@ -67,6 +73,7 @@ def prepareWordList_Words():
 
     print("Set of words: count = " + str(wC))
     print("Set of word hashes: count = " + str(wHashes))
+# ----------------------------------------------------
 
 # Prepares the word list, basically preprocess it.
 def prepareWordList_SynSet():
@@ -86,6 +93,7 @@ def prepareWordList_SynSet():
 
     print("Set of words: count = " + str(wC))
     print("Set of word hashes: count = " + str(wHashes))
+# ----------------------------------------------------
 
 
 # Prepares the word list, basically preprocess it.
@@ -98,7 +106,7 @@ def prepareWordList():
 
     logging.error("Invalid dictionary source... exiting...")
     exit(-32)
-
+# ----------------------------------------------------
 
 
 # Checks if the given word exists in dictionary.
@@ -112,6 +120,8 @@ def doesWordExistInDictionary_Words(theWord, args):
         return True
 
     return False
+# ----------------------------------------------------
+
 
 # Checks if the given word exists in dictionary.
 def doesWordExistInDictionary_SynSet(theWord, args):
@@ -124,7 +134,7 @@ def doesWordExistInDictionary_SynSet(theWord, args):
         return True
 
     return False
-
+# ----------------------------------------------------
 
 # Checks if the given word exists in dictionary.
 def doesWordExistInDictionary(theWord, args):
@@ -136,7 +146,7 @@ def doesWordExistInDictionary(theWord, args):
 
     logging.error("Invalid dictionary source... exiting...")
     exit(-32)
-
+# ----------------------------------------------------
 
 # Returns if the base word + remaining letters can form a possible word.
 def canFormMeaningfulWord(word, startIndex, length):
@@ -170,3 +180,4 @@ def canFormMeaningfulWord(word, startIndex, length):
             return True
 
     return False
+# ----------------------------------------------------

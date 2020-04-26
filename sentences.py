@@ -116,7 +116,7 @@ def formSentences(orgString, theWords, args):
     #     if isSentenceAllowed(len(orgString), n_s, args):
     #         print(n_s)
 
-    allSentences = formSentencesInternal(orgString, allWords, args)
+    allSentences = formSentencesInternal2(orgString, allWords, args)
     logSentences(allSentences, args)
 
     return
@@ -133,6 +133,7 @@ def formSentencesInternal2(orgString, allWords, args):
 
     for ii in counts:
         iLen = int(ii)
+        ss = []
         r1 = math.factorial(slen) / math.factorial(slen - iLen)
         # logging.info("No. of combinations: Total length = %d, Current length = %d, Total = %d" % (slen, iLen, r1))
 
@@ -141,7 +142,9 @@ def formSentencesInternal2(orgString, allWords, args):
             for s in subset:
                 n_s = n_s + s + " "
             if isSentenceAllowed(len(orgString), n_s, args):
-                allSentences[ii].append(n_s)
+                ss.append(n_s)
+
+        allSentences[str(ii)] = ss
 
     return allSentences
 # ----------------------------------------------------
@@ -158,11 +161,9 @@ def formSentencesInternal(orgString, allWords, args):
         logging.error("Invalid word count to form sentences. Exiting....")
         exit(-55)
 
-    iIndex = 0
-    nMaxL = len(counts)
-    while(iIndex < nMaxL):
-        iLen = int(counts[iIndex])
-        iIndex += 1
+    for ii in counts:
+        iLen = int(ii)
+
         r1 = math.factorial(slen) / math.factorial(slen - iLen)
         #logging.info("No. of combinations: Total length = %d, Current length = %d, Total = %d" % (slen, iLen, r1))
 

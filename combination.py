@@ -1,5 +1,6 @@
 import math
-
+import logging
+import time
 
 # If you pass the word, it'll tell you if this word can be used in the current sentence
 def isSentenceAllowed(originalStringLength, sentence, args):
@@ -179,35 +180,174 @@ def genCombinationsEx2(originalString, originalStringLength, allWords, n, r, arg
 
     return retSet
 
+# Takes all the words and tries to form sentences.
+def logSentences(s, args):
+    logging.info("Logging all sentences:")
+    for ss in s:
+        logging.info(" ** " + str(ss) + ", count = " + str(len(s[ss])))
+        for sss in s[ss]:
+            logging.info("       " + str(sss));
+    logging.info(" --------- ")
+# ----------------------------------------------------
 
+def getSentence(start, end, s, allWords, n, r):
+    n_s = ""
+    for iA in range(start, end):
+        if(s[iA] >= n):
+            n_s += " --OOR-- "
+        else:
+            n_s += allWords[s[iA]] + " "
 
+    return n_s;
 
-def genCombinationsEx3(n, r):
+def getSentenceLength(start, end, s, allWords, n, r):
+    n_l = 0
+    for iA in range(start, end):
+        if(s[iA] >= n):
+            n_l += 9
+        else:
+            n_l += len(allWords[s[iA]])
+
+    return n_l;
+
+def combine(s, n, r, index, originalString, originalStringLength, allWords, args):
+    retSet = []
+
+    if (index == (r - 1)) & (s[index] < n):
+        #print("Found C (Index = %d): %s", (index, str(s)))
+        #retSet.append(s[:r]);
+        n_s = getSentence(0, r, s, allWords, n, r)
+        if isSentenceAllowed(originalStringLength, n_s, args):
+            retSet.append(n_s)
+        else:
+            #if (allWords[s[0]] == "harvests") & (allWords[s[1]] == "ham"):
+            #    pass
+            #print("(2) Invalid string at: index=" + str(index) + ", indices = " + str(s) + ", s = " + n_s)
+            pass
+
+    #print(("Combine called: (Index = %d): %s"), (index, str(s)))
+    while True:
+        args.combineIterator += 1
+
+        if index < (r - 1):
+            n_l = getSentenceLength(0, index+1, s, allWords, n, r)
+            if n_l <= originalStringLength:
+                ar = combine(s, n, r, index + 1, originalString, originalStringLength, allWords, args)
+                retSet.extend(ar)
+            else:
+                #if (allWords[s[0]] == "harvests") & (allWords[s[1]] == "ham"):
+                #    pass
+                #print("Invalid string at: index=" + str(index) + ", indices = " + str(s) + ", s = " + n_s)
+                pass
+
+            s[index] = s[index] + 1
+
+            if s[index] < n:
+                for iA in range(index+1, r):
+                    s[iA] = s[iA-1] + 1
+            else:
+                break;
+        else:
+            s[index] = s[index] + 1
+
+            if s[index] >= n:
+                break
+
+            #print("Found C (Index = %d): %s", (index, str(s)))
+            #retSet.append(s);
+            n_s = getSentence(0, r, s, allWords, n, r)
+            if isSentenceAllowed(originalStringLength, n_s, args):
+                retSet.append(n_s);
+            else:
+                #if (allWords[s[0]] == "harvests") & (allWords[s[1]] == "ham"):
+                #    pass
+                #print("(3) Invalid string at: index=" + str(index) + ", indices = " + str(s) + ", s = " + n_s)
+                pass
+
+    return retSet
+# ----------------------------------------------------
+
+def genCombinationsEx4Internal(originalString, originalStringLength, allWords, n, r, args):
     retSet = []
     s = []
+
     for i in range(0, r):
         s.append(i)
 
-    retSet.append(s[:r]);
-
-    first = 0
-    last = r;
-    n = n-1
-
+    args.combineIterator = 1
     totalC = int(howManyCombinations(n, r))
-    while s[first] != (n - r + 1):
-        mt = last
+    retSet = combine(s, n, r, 0, originalString, originalStringLength, allWords, args)
 
-        mt = mt - 1
-        while s[mt] >= (n - (last - mt) + 1):
-            mt = mt - 1
-        s[mt] = s[mt] + 1
+    logging.info("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d" % (n, r, totalC, args.combineIterator))
 
-        mt = mt + 1
-        while mt != last:
-            s[mt] = s[(mt-1)] + 1;
-            mt = mt + 1
+    return retSet
+# ----------------------------------------------------
 
+def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
+    retSet = {}
+
+    calculateOriginalSentenceHash(originalString)
+
+    counts = args.wordCount.split(',')
+    if len(counts) <= 0:
+        logging.error("Invalid word count to form sentences. Exiting....")
+        exit(-55)
+
+    for ii in counts:
+        iLen = int(ii)
+
+        start = time.time()
+        retSet[ii] = genCombinationsEx4Internal(originalString, originalStringLength, allWords, n, iLen, args)
+        end = time.time()
+
+        elapsed = end - start
+        logging.info("Total time taken to form sentences with (r=%d, n = %d) = %d seconds" % (iLen, n, int(elapsed)))
+
+    logSentences(retSet, args)
+    return retSet
+# ----------------------------------------------------
+
+def combineOrg(s, n, r, index):
+    retSet = []
+
+    if (index == (r - 1)) & (s[index] < n):
+        print("Found C (Index = %d): %s", (index, str(s)))
         retSet.append(s[:r]);
+
+    #print(("Combine called: (Index = %d): %s"), (index, str(s)))
+    while True:
+        if index < (r - 1):
+            ar = combine(s, n, r, index + 1)
+            retSet.append(ar)
+
+            s[index] = s[index] + 1
+
+            if s[index] < n:
+                for iA in range(index+1, r):
+                    s[iA] = s[iA-1] + 1
+            else:
+                break;
+
+        #if index == (r - 1):
+        else:
+            s[index] = s[index] + 1
+
+            if s[index] >= n:
+                break
+
+            print("Found C (Index = %d): %s", (index, str(s)))
+            retSet.append(s[:r]);
+
+    return retSet
+
+def genCombinationsEx3(n, r):
+    s = []
+    retSet = []
+
+    for i in range(0, r):
+        s.append(i)
+    #retSet.append(s[:r]);
+
+    retSet = combine(s, n, r, 0)
 
     return retSet

@@ -1,5 +1,6 @@
 from dictionary import *
 import logging
+import time
 import itertools
 from combination import *
 theOrgStringHash = {}
@@ -82,7 +83,7 @@ def calculateOriginalSentenceHash(orgString):
 def logSentences(s, args):
     logging.info("Logging all sentences:")
     for ss in s:
-        logging.info(" ** " + str(ss))
+        logging.info(" ** " + str(ss) + ", count = " + str(len(s[ss])))
         for sss in s[ss]:
             logging.info("       " + str(sss));
     logging.info(" --------- ")
@@ -152,6 +153,7 @@ def formSentencesInternal2(orgString, allWords, args):
         r1 = math.factorial(slen) / math.factorial(slen - iLen)
         # logging.info("No. of combinations: Total length = %d, Current length = %d, Total = %d" % (slen, iLen, r1))
 
+        start = time.time()
         for subset in itertools.combinations(allWords, iLen):
             n_s = ""
             for s in subset:
@@ -160,6 +162,11 @@ def formSentencesInternal2(orgString, allWords, args):
                 ss.append(n_s)
 
         allSentences[str(ii)] = ss
+
+        end = time.time()
+
+        elapsed = end - start
+        logging.info("Total time taken to form sentences with (r=%d, n = %d) = %d seconds" % (iLen, len(orgString), int(elapsed)))
 
     return allSentences
 # ----------------------------------------------------

@@ -148,7 +148,8 @@ def getWordsCombination(in_string, n, r):
 # ----------------------------------------------------
 
 
-#genCombinationsEx(12, 4);
+#genCombinationsEx3(5, 3);
+
 
 initDictionary(args);
 prepareWordList();
@@ -164,6 +165,6 @@ args.words = formWords(args.nstring)
 logging.info("Words = " + str(args.words))
 
 args.allWordsArray = flattenWords(args.words, args)
-genCombinationsEx2(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), 4, args)
+genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
 
 formSentences(args.nstring, args.words, args)

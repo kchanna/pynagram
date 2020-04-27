@@ -1,5 +1,5 @@
-import os, math
-import datetime
+import time
+from datetime import timedelta
 import platform, os, sys, subprocess
 import argparse
 from dictionary import *
@@ -53,17 +53,30 @@ def prepareString(in_str):
     return ret_str
 
 
-def formWords(in_str):
+def formWords(in_str, args):
+    start = time.time()
     all_words = { }
     slen = len(in_str)
     iLen = 0
     while(iLen < slen):
+        sInner = time.time();
+
         iLen += 1
         r1 = math.factorial(slen) / math.factorial(slen - iLen)
         logging.info("No. of combinations: Total length = %d, Current length = %d, Total = %d" % (slen, iLen, r1))
 
         args.combinations[str(iLen)] = int(round(r1))
         all_words[str(iLen)] = getWordsCombination(in_str, slen, iLen)
+
+        eInner = time.time() - sInner
+        eInner = str(timedelta(seconds=eInner))
+        logging.info("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)" % (iLen, slen, eInner))
+        args.fileOutput.write("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, slen, eInner))
+
+    elapsed = time.time() - start
+    elapsed = str(timedelta(seconds=elapsed))
+    logging.info("Total time taken to form words = %s (H:M:S.Millis)" % (elapsed))
+    args.fileOutput.write("Total time taken to form words = %s (H:M:S.Millis)\n" % (elapsed))
 
     return all_words
 
@@ -151,7 +164,7 @@ def logToFile(fileToWriteTo, origString, alteredString, allWords, sentences):
         fileToWriteTo.write("---- Original String: " + origString + ", Length = " + str(len(origString)) + "\n")
     if (None != alteredString):
         fileToWriteTo.write("---- Processed String: " + alteredString + ", Length = " + str(len(alteredString)) + "\n")
-        fileToWriteTo.write("---- Which Dictionary?: " + USE_WHICH_DICTIONARY + "\n")
+        fileToWriteTo.write("---- Which Dictionary?: " + getCurrentDictionary() + "\n")
 
     if(None != allWords):
         fileToWriteTo.write("---- Total number of words: " + str(len(allWords)) + "\n")
@@ -188,14 +201,14 @@ args.nstring = prepareString(args.string)
 logging.info("Prepared string:" + str(args.nstring))
 
 total_words_formed = 0
-args.fileOutputName = os.path.join("output", args.nstring + "_" + args.wordCount + "_" + USE_WHICH_DICTIONARY + ".txt")
+args.fileOutputName = os.path.join("output", args.nstring + "_" + args.wordCount + "_" + getCurrentDictionary() + ".txt")
 args.fileOutput = open(args.fileOutputName, "w")
 if None == args.fileOutput:
     logging.error("Failed to open file for writing: " + args.fileOutputName)
 
 logToFile(args.fileOutput, args.string, args.nstring, None, None)
 
-args.words = formWords(args.nstring)
+args.words = formWords(args.nstring, args)
 logging.info("Words = " + str(args.words))
 args.allWordsArray = flattenWords(args.words, args)
 

@@ -4,19 +4,33 @@ from nltk.corpus import wordnet
 from nltk.corpus import words
 from nltk.corpus import brown
 import logging
+import enchant
 
 
 setofwords = set()
-setofwordsN = set()
 wordsHashSet = {}
 MAX_WORD_LENGTH_FOR_HASH = 12
-USE_WHICH_DICTIONARY = "brown"    # Possible values: wordnet_syn (synsets), words, brown
+USE_WHICH_DICTIONARY = "brown"    # Possible values: wordnet_syn (synsets), words, brown, d1 (dwyl)
 
+
+def getCurrentDictionary():
+    return USE_WHICH_DICTIONARY
+# ----------------------------------------------------
 
 def initDictionary(args):
     global USE_WHICH_DICTIONARY
+    global setofwords
 
     USE_WHICH_DICTIONARY = args.dict
+    if USE_WHICH_DICTIONARY == "wordnet_syn":
+        pass
+    else:
+        if (USE_WHICH_DICTIONARY == "words") | (USE_WHICH_DICTIONARY == "brown"):
+            pass
+        else:
+            if (USE_WHICH_DICTIONARY == "d1"):
+                with open('dict/d1_words_alpha.txt') as word_file:
+                    setofwords = set(word_file.read().split())
 # ----------------------------------------------------
 
 # Processes the "theWord" and adds the range of characters into the hash map
@@ -58,41 +72,29 @@ def prepareWordList_Words():
         if USE_WHICH_DICTIONARY == "brown":
             setofwords = set(brown.words())
         else:
-            logging.error("Invalid dictionary source... exiting...")
-            exit(-45)
+            if USE_WHICH_DICTIONARY == "d1":
+                # We would have already initializewd set of words...
+                pass
+            else:
+                logging.error("Invalid dictionary source... exiting...")
+                exit(-45)
 
-    setofwordsN = set()
     wC = 0;
     wHashes = 0;
     for w in setofwords:
         w = w.lower()
-        setofwordsN.add(w)
         wC = wC + 1
 
         wHashes += prepareWordHashList(w);
 
-    print("Set of words: count = " + str(wC))
-    print("Set of word hashes: count = " + str(wHashes))
+    logging.info("Dictionary being used: " + USE_WHICH_DICTIONARY)
+    logging.info("Set of words: count = " + str(wC))
+    logging.info("Set of word hashes: count = " + str(wHashes))
 # ----------------------------------------------------
 
 # Prepares the word list, basically preprocess it.
 def prepareWordList_SynSet():
-    global setofwords
-    global setofwordsN
-
-    setofwords = set(words.words())
-    setofwordsN = set()
-    wC = 0;
-    wHashes = 0;
-    for w in setofwords:
-        w = w.lower()
-        setofwordsN.add(w)
-        wC = wC + 1
-
-        wHashes += prepareWordHashList(w);
-
-    print("Set of words: count = " + str(wC))
-    print("Set of word hashes: count = " + str(wHashes))
+    prepareWordList_Words()
 # ----------------------------------------------------
 
 
@@ -103,6 +105,9 @@ def prepareWordList():
     else:
         if (USE_WHICH_DICTIONARY == "words") | (USE_WHICH_DICTIONARY == "brown"):
             return prepareWordList_Words()
+        else:
+            if (USE_WHICH_DICTIONARY == "d1"):
+                return prepareWordList_Words()
 
     logging.error("Invalid dictionary source... exiting...")
     exit(-32)
@@ -143,6 +148,9 @@ def doesWordExistInDictionary(theWord, args):
     else:
         if USE_WHICH_DICTIONARY == "words" | USE_WHICH_DICTIONARY == "brown":
             return doesWordExistInDictionary_Words(theWord)
+        else:
+            if USE_WHICH_DICTIONARY == "d1":
+                return doesWordExistInDictionary_Words(theWord)
 
     logging.error("Invalid dictionary source... exiting...")
     exit(-32)

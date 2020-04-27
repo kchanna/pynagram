@@ -5,6 +5,7 @@ import argparse
 from dictionary import *
 from sentences import *
 import logging
+import os.path
 
 
 # 1. Script Inputs
@@ -143,11 +144,39 @@ def getWordsCombination(in_string, n, r):
     ret_data = permute(ret_data, in_str, n, 0, r, 0)
 
     return ret_data
-
-
 # ----------------------------------------------------
 
+def logToFile(fileToWriteTo, origString, alteredString, allWords, sentences):
+    if (None != origString):
+        fileToWriteTo.write("---- Original String: " + origString + ", Length = " + str(len(origString)) + "\n")
+    if (None != alteredString):
+        fileToWriteTo.write("---- Processed String: " + alteredString + ", Length = " + str(len(alteredString)) + "\n")
+        fileToWriteTo.write("---- Which Dictionary?: " + USE_WHICH_DICTIONARY + "\n")
 
+    if(None != allWords):
+        fileToWriteTo.write("---- Total number of words: " + str(len(allWords)) + "\n")
+        lW = -1
+        for w in allWords:
+            if lW != len(w):
+                lW = len(w)
+                fileToWriteTo.write("---- Words with length: " + str(lW) + "\n")
+            fileToWriteTo.write(w + "\n")
+        fileToWriteTo.write("---- All Words written" + "\n")
+
+    if (None != sentences):
+        fileToWriteTo.write("---- Total number of sentence groups: " + str(len(sentences)) + "\n")
+        for ss in sentences:
+            fileToWriteTo.write("---- Total number of sentences in this group: " + str(len(sentences[ss])) + "\n")
+            for s in sentences[ss]:
+                fileToWriteTo.write(s + "\n")
+
+        fileToWriteTo.write("---- All sentences written" + "\n")
+    # ----------------------------------------------------
+
+
+
+
+    # ----------------------------------------------------
 #genCombinationsEx3(5, 3);
 
 
@@ -159,12 +188,20 @@ args.nstring = prepareString(args.string)
 logging.info("Prepared string:" + str(args.nstring))
 
 total_words_formed = 0
+args.fileOutputName = os.path.join("output", args.nstring + "_" + args.wordCount + "_" + USE_WHICH_DICTIONARY + ".txt")
+args.fileOutput = open(args.fileOutputName, "w")
+if None == args.fileOutput:
+    logging.error("Failed to open file for writing: " + args.fileOutputName)
 
+logToFile(args.fileOutput, args.string, args.nstring, None, None)
 
 args.words = formWords(args.nstring)
 logging.info("Words = " + str(args.words))
-
 args.allWordsArray = flattenWords(args.words, args)
-genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
 
-formSentences(args.nstring, args.words, args)
+logToFile(args.fileOutput, None, None, args.allWordsArray, None)
+
+args.sentences = genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
+logToFile(args.fileOutput, None, None, None, args.sentences)
+
+#formSentences(args.nstring, args.words, args)

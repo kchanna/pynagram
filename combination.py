@@ -1,6 +1,7 @@
 import math
 import logging
 import time
+from datetime import timedelta
 
 # If you pass the word, it'll tell you if this word can be used in the current sentence
 def isSentenceAllowed(originalStringLength, sentence, args):
@@ -181,12 +182,13 @@ def genCombinationsEx2(originalString, originalStringLength, allWords, n, r, arg
     return retSet
 
 # Takes all the words and tries to form sentences.
-def logSentences(s, args):
+def logSentences(s, logAll, args):
     logging.info("Logging all sentences:")
     for ss in s:
         logging.info(" ** " + str(ss) + ", count = " + str(len(s[ss])))
-        for sss in s[ss]:
-            logging.info("       " + str(sss));
+        if logAll:
+            for sss in s[ss]:
+                logging.info("       " + str(sss));
     logging.info(" --------- ")
 # ----------------------------------------------------
 
@@ -279,6 +281,7 @@ def genCombinationsEx4Internal(originalString, originalStringLength, allWords, n
     retSet = combine(s, n, r, 0, originalString, originalStringLength, allWords, args)
 
     logging.info("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d" % (n, r, totalC, args.combineIterator))
+    args.fileOutput.write("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d\n" % (n, r, totalC, args.combineIterator))
 
     return retSet
 # ----------------------------------------------------
@@ -301,9 +304,11 @@ def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
         end = time.time()
 
         elapsed = end - start
-        logging.info("Total time taken to form sentences with (r=%d, n = %d) = %d seconds" % (iLen, n, int(elapsed)))
+        elapsed = str(timedelta(seconds=elapsed))
+        logging.info("Total time taken to form sentences with (r=%d, n=%d) = %s (H:M:S.Millis)" % (iLen, n, elapsed))
+        args.fileOutput.write("Total time taken to form sentences with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, n, elapsed))
 
-    logSentences(retSet, args)
+    logSentences(retSet, False, args)
     return retSet
 # ----------------------------------------------------
 

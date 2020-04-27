@@ -3,9 +3,9 @@ import logging
 import time
 import itertools
 from combination import *
+from datetime import timedelta
+
 theOrgStringHash = {}
-
-
 
 # Returns if the base word + remaining letters can form a possible word.
 def isSentenceAllowedEx(originalStringLength, input, startIndex, length, args):
@@ -166,7 +166,8 @@ def formSentencesInternal2(orgString, allWords, args):
         end = time.time()
 
         elapsed = end - start
-        logging.info("Total time taken to form sentences with (r=%d, n = %d) = %d seconds" % (iLen, len(orgString), int(elapsed)))
+        elapsed = str(timedelta(seconds=elapsed))
+        logging.info("Total time taken to form sentences with (r=%d, n = %d) = %s (H:M:S.Millis)" % (iLen, len(orgString), elapsed))
 
     return allSentences
 # ----------------------------------------------------

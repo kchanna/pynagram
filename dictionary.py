@@ -4,7 +4,6 @@ from nltk.corpus import wordnet
 from nltk.corpus import words
 from nltk.corpus import brown
 import logging
-import enchant
 
 
 setofwords = set()

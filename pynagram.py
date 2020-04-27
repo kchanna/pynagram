@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('--string', type=str, help='The original string, from which anagram is formed.')
 parser.add_argument('--verbose', action='store_true', help='[Optional] The verbose log flag... to debug issues.')
-parser.add_argument('--dict', type=str, default="brown", help='[Optional] The dictionary to use.')
+parser.add_argument('--dict', type=str, default="brown", help='[Optional] The dictionary to use. One of wordnet_syn, words, brown')
 parser.add_argument('--wordCount', type=str, default="4,5", help='[Optional] The number of words to use in a sentence.')
 #parser.add_argument('-h', '--help', help='[Optional] Show options and exit', required=False)
 

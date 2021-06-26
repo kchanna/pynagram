@@ -281,13 +281,17 @@ def genCombinationsEx4Internal(originalString, originalStringLength, allWords, n
     retSet = combine(s, n, r, 0, originalString, originalStringLength, allWords, args)
 
     logging.info("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d" % (n, r, totalC, args.combineIterator))
-    args.fileOutput.write("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d\n" % (n, r, totalC, args.combineIterator))
+    #args.fileOutput.write("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d\n" % (n, r, totalC, args.combineIterator))
+
+    args.logJsonToFileStats["nCr"] = { "N": n, "R": r, "nCr": totalC, "actual-nCr": args.combineIterator }
 
     return retSet
 # ----------------------------------------------------
 
 def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
     retSet = {}
+
+    startT = time.time()
 
     calculateOriginalSentenceHash(originalString)
 
@@ -296,6 +300,7 @@ def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
         logging.error("Invalid word count to form sentences. Exiting....")
         exit(-55)
 
+    jStats = {}
     for ii in counts:
         iLen = int(ii)
 
@@ -306,9 +311,17 @@ def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
         elapsed = end - start
         elapsed = str(timedelta(seconds=elapsed))
         logging.info("Total time taken to form sentences with (r=%d, n=%d) = %s (H:M:S.Millis)" % (iLen, n, elapsed))
-        args.fileOutput.write("Total time taken to form sentences with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, n, elapsed))
+        #args.fileOutput.write("(C.py) Total time taken to form sentences with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, n, elapsed))
+
+        jStats[iLen] = { "timeSpent": elapsed }
 
     logSentences(retSet, False, args)
+
+    endT = time.time()
+    elapsed = endT - startT
+    elapsed = str(timedelta(seconds=elapsed))
+    args.logJsonToFileStats["sentences"] = { "timeFormat": "(H:M:S.Millis)", "n": n, "totalTime": elapsed, "data" : jStats }
+
     return retSet
 # ----------------------------------------------------
 

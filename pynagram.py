@@ -6,6 +6,7 @@ from dictionary import *
 from sentences import *
 import logging
 import os.path
+import json
 
 
 # 1. Script Inputs
@@ -16,6 +17,7 @@ parser.add_argument('--string', type=str, help='The original string, from which 
 parser.add_argument('--verbose', action='store_true', help='[Optional] The verbose log flag... to debug issues.')
 parser.add_argument('--dict', type=str, default="brown", help='[Optional] The dictionary to use. One of wordnet_syn, words, brown')
 parser.add_argument('--wordCount', type=str, default="4,5", help='[Optional] The number of words to use in a sentence.')
+parser.add_argument('--outFile', type=str, help='[Optional] The path where the output file is written.')
 #parser.add_argument('-h', '--help', help='[Optional] Show options and exit', required=False)
 
 
@@ -58,6 +60,7 @@ def formWords(in_str, args):
     all_words = { }
     slen = len(in_str)
     iLen = 0
+    jStats = {}
     while(iLen < slen):
         sInner = time.time();
 
@@ -71,12 +74,15 @@ def formWords(in_str, args):
         eInner = time.time() - sInner
         eInner = str(timedelta(seconds=eInner))
         logging.info("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)" % (iLen, slen, eInner))
-        args.fileOutput.write("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, slen, eInner))
+        jStats[iLen] = { "timeSpent": eInner }
+        #args.fileOutput.write("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, slen, eInner))
 
     elapsed = time.time() - start
     elapsed = str(timedelta(seconds=elapsed))
     logging.info("Total time taken to form words = %s (H:M:S.Millis)" % (elapsed))
-    args.fileOutput.write("Total time taken to form words = %s (H:M:S.Millis)\n" % (elapsed))
+    #args.fileOutput.write("Total time taken to form words = %s (H:M:S.Millis)\n" % (elapsed))
+
+    args.logJsonToFileStats["words"] = { "timeFormat": "(H:M:S.Millis)", "n": slen, "totalTime": elapsed, "data" : jStats }
 
     return all_words
 
@@ -187,6 +193,50 @@ def logToFile(fileToWriteTo, origString, alteredString, allWords, sentences):
     # ----------------------------------------------------
 
 
+def logToFileEx(jsonObject, origString, alteredString, allWords, sentences):
+    incJ = { }
+    if (None != origString):
+        incJ = { "string" : origString, "length" : len(origString) }
+    if (None != alteredString):
+        inc = { "string" : alteredString, "length" : len(alteredString) }
+
+        jsonObject["input"] = { "dictionary" : getCurrentDictionary(), "incoming" : incJ, "altered" : inc }
+
+    if(None != allWords):
+        wordJ = { "total" : len(allWords), }
+        iLm = -1
+        wordList = []
+        currentWords = []
+        for w in allWords:
+            if iLm != len(w):
+                if len(currentWords) > 0:
+                    wordList.append({ iLm : { "count": len(currentWords), "words" : currentWords } })
+                    currentWords = []
+
+            currentWords.append(w)
+            iLm = len(w)
+
+        if len(currentWords) > 0:
+            wordList.append({ iLm : { "count": len(currentWords), "words" : currentWords } })
+            currentWords = []
+
+        wordJ["listing"] = wordList
+        jsonObject["words"] = wordJ
+
+
+    if (None != sentences):
+        sentJ = []
+        currentS = []
+        for ss in sentences:
+            for s in sentences[ss]:
+                currentS.append(s)
+
+            sentJ.append({ len(sentences[ss]) : currentS })
+            currentS = []
+
+        jsonObject["sentences"] = { "total": len(sentences), "listing" : sentJ }
+    # ----------------------------------------------------
+
 
 
     # ----------------------------------------------------
@@ -201,20 +251,39 @@ args.nstring = prepareString(args.string)
 logging.info("Prepared string:" + str(args.nstring))
 
 total_words_formed = 0
-args.fileOutputName = os.path.join("output", args.nstring + "_" + args.wordCount + "_" + getCurrentDictionary() + ".txt")
+if args.outFile == None:
+    args.fileOutputName = os.path.join("output", args.nstring + "_" + args.wordCount + "_" + getCurrentDictionary() + ".txt")
+else:
+    args.fileOutputName = args.outFile
+
+logging.info("Out file for writing: " + args.fileOutputName)
+
 args.fileOutput = open(args.fileOutputName, "w")
 if None == args.fileOutput:
     logging.error("Failed to open file for writing: " + args.fileOutputName)
 
-logToFile(args.fileOutput, args.string, args.nstring, None, None)
+# Data to be written
+logJsonToFile = { }
+args.logJsonToFileStats = { }
+
+#logToFile(args.fileOutput, args.string, args.nstring, None, None)
+logToFileEx(logJsonToFile, args.string, args.nstring, None, None)
 
 args.words = formWords(args.nstring, args)
 logging.info("Words = " + str(args.words))
 args.allWordsArray = flattenWords(args.words, args)
 
-logToFile(args.fileOutput, None, None, args.allWordsArray, None)
+#logToFile(args.fileOutput, None, None, args.allWordsArray, None)
+logToFileEx(logJsonToFile, None, None, args.allWordsArray, None)
 
 args.sentences = genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
-logToFile(args.fileOutput, None, None, None, args.sentences)
+#logToFile(args.fileOutput, None, None, None, args.sentences)
+logToFileEx(logJsonToFile, None, None, None, args.sentences)
+
+logJsonToFile["stats"] = args.logJsonToFileStats
+  
+# Serializing json 
+json_object = json.dumps(logJsonToFile, indent = 4)
+args.fileOutput.write(json_object)
 
 #formSentences(args.nstring, args.words, args)

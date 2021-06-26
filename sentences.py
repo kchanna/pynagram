@@ -167,7 +167,7 @@ def formSentencesInternal2(orgString, allWords, args):
 
         elapsed = end - start
         elapsed = str(timedelta(seconds=elapsed))
-        logging.info("Total time taken to form sentences with (r=%d, n = %d) = %s (H:M:S.Millis)" % (iLen, len(orgString), elapsed))
+        logging.info("(S.py) Total time taken to form sentences with (r=%d, n = %d) = %s (H:M:S.Millis)" % (iLen, len(orgString), elapsed))
 
     return allSentences
 # ----------------------------------------------------

@@ -4,6 +4,7 @@ import platform, os, sys, subprocess
 import argparse
 from dictionary import *
 from sentences import *
+from io import StringIO
 import logging
 import os.path
 import json
@@ -283,7 +284,10 @@ logToFileEx(logJsonToFile, None, None, None, args.sentences)
 logJsonToFile["stats"] = args.logJsonToFileStats
   
 # Serializing json 
-json_object = json.dumps(logJsonToFile, indent = 4)
-args.fileOutput.write(json_object)
+str_io_obj = StringIO()
+json.dump(logJsonToFile, str_io_obj)
+#json_object = json.dumps(logJsonToFile, indent = 4)
+args.fileOutput.write(str_io_obj.getvalue())
+
 
 #formSentences(args.nstring, args.words, args)

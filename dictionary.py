@@ -75,7 +75,7 @@ def prepareWordList_Words():
                 # We would have already initializewd set of words...
                 pass
             else:
-                logging.error("Invalid dictionary source... exiting...")
+                logging.error("Invalid dictionary source... exiting... [" + str(USE_WHICH_DICTIONARY) + "]")
                 exit(-45)
 
     wC = 0;

@@ -277,9 +277,9 @@ args.allWordsArray = flattenWords(args.words, args)
 #logToFile(args.fileOutput, None, None, args.allWordsArray, None)
 logToFileEx(logJsonToFile, None, None, args.allWordsArray, None)
 
-args.sentences = genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
+# commenting for performance reason args.sentences = genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
 #logToFile(args.fileOutput, None, None, None, args.sentences)
-logToFileEx(logJsonToFile, None, None, None, args.sentences)
+# commenting for performance reason logToFileEx(logJsonToFile, None, None, None, args.sentences)
 
 logJsonToFile["stats"] = args.logJsonToFileStats
   

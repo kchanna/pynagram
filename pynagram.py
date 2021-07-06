@@ -19,6 +19,7 @@ parser.add_argument('--verbose', action='store_true', help='[Optional] The verbo
 parser.add_argument('--dict', type=str, default="brown", help='[Optional] The dictionary to use. One of wordnet_syn, words, brown')
 parser.add_argument('--wordCount', type=str, default="4,5", help='[Optional] The number of words to use in a sentence.')
 parser.add_argument('--outFile', type=str, help='[Optional] The path where the output file is written.')
+parser.add_argument('--timeout', type=int, default="20", help='[Optional] Stop processing after these many seconds.')
 #parser.add_argument('-h', '--help', help='[Optional] Show options and exit', required=False)
 
 
@@ -35,6 +36,15 @@ else:
 args.combinations = {};
 addedWords = {}
 
+
+def areWeOutOfTime(arg_):
+    end = time.time() - arg_.opStartedTime
+    end = timedelta(seconds=end)
+    if(end >= arg_.stopAfterTheseManySeconds):
+        arg_.outOfTime = True
+        return True
+
+    return False 
 
 # Takes the input string and removes special characters and spaces
 def prepareString(in_str):
@@ -63,7 +73,7 @@ def formWords(in_str, args):
     iLen = 0
     jStats = {}
     while(iLen < slen):
-        sInner = time.time();
+        sInner = time.time();        
 
         iLen += 1
         r1 = math.factorial(slen) / math.factorial(slen - iLen)
@@ -77,6 +87,9 @@ def formWords(in_str, args):
         logging.info("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)" % (iLen, slen, eInner))
         jStats[iLen] = { "timeSpent": eInner }
         #args.fileOutput.write("Total time taken to form words with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, slen, eInner))
+
+        if(areWeOutOfTime(args)):
+            break
 
     elapsed = time.time() - start
     elapsed = str(timedelta(seconds=elapsed))
@@ -98,6 +111,9 @@ def formWords(in_str, args):
 def permute(saved_words, in_str, n, l, r, depth):
     global addedWords
     logging.debug("DEBUG: depth = %d, a = %s, l = %d, r = %d," % (depth, in_str, l, r))
+
+    if(areWeOutOfTime(args)):
+        return saved_words
 
     if (l == r):
         n_word = ""
@@ -201,10 +217,10 @@ def logToFileEx(jsonObject, origString, alteredString, allWords, sentences):
     if (None != alteredString):
         inc = { "string" : alteredString, "length" : len(alteredString) }
 
-        jsonObject["input"] = { "dictionary" : getCurrentDictionary(), "incoming" : incJ, "altered" : inc }
+        jsonObject["input"] = { "dictionary" : getCurrentDictionary(), "incoming" : incJ, "altered" : inc, "maxTimeAllowedToRun": args.stopAfter }
 
     if(None != allWords):
-        wordJ = { "total" : len(allWords), }
+        wordJ = { "total" : len(allWords), "outOfTime": args.outOfTime }
         iLm = -1
         wordList = []
         currentWords = []
@@ -243,6 +259,14 @@ def logToFileEx(jsonObject, origString, alteredString, allWords, sentences):
     # ----------------------------------------------------
 #genCombinationsEx3(5, 3);
 
+
+args.opStartedTime = time.time()
+args.stopAfter = args.timeout
+if(args.stopAfter > 30):
+    args.stopAfter = 30
+args.stopAfterTheseManySeconds = timedelta(seconds=args.stopAfter)
+logging.info("Max time allowed to run = " + str(args.stopAfterTheseManySeconds) + " seconds.")
+args.outOfTime = False
 
 initDictionary(args);
 prepareWordList();

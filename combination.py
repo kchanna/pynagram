@@ -321,6 +321,8 @@ def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
     jStats = {}
     for ii in counts:
         iLen = int(ii)
+        if(iLen > n):
+            break
 
         start = time.time()
         retSet[ii] = genCombinationsEx4Internal(originalString, originalStringLength, allWords, n, iLen, args)

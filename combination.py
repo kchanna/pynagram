@@ -39,6 +39,16 @@ def isSentenceAllowed(originalStringLength, sentence, args):
 # ----------------------------------------------------
 
 
+def areWeOutOfTime(arg_):
+    end = time.time() - arg_.opStartedTime
+    end = timedelta(seconds=end)
+    if(end >= arg_.stopAfterTheseManySeconds):
+        arg_.outOfTimeSentences = True
+        return True
+
+    return False 
+# ----------------------------------------------------
+
 # Reset
 def calculateOriginalSentenceHash(orgString):
     global theOrgStringHash
@@ -215,6 +225,9 @@ def getSentenceLength(start, end, s, allWords, n, r):
 def combine(s, n, r, index, originalString, originalStringLength, allWords, args):
     retSet = []
 
+    if(areWeOutOfTime(args)):
+        return retSet
+
     if (index == (r - 1)) & (s[index] < n):
         #print("Found C (Index = %d): %s", (index, str(s)))
         #retSet.append(s[:r]);
@@ -230,6 +243,9 @@ def combine(s, n, r, index, originalString, originalStringLength, allWords, args
     #print(("Combine called: (Index = %d): %s"), (index, str(s)))
     while True:
         args.combineIterator += 1
+
+        if(areWeOutOfTime(args)):
+            break
 
         if index < (r - 1):
             n_l = getSentenceLength(0, index+1, s, allWords, n, r)
@@ -278,6 +294,8 @@ def genCombinationsEx4Internal(originalString, originalStringLength, allWords, n
 
     args.combineIterator = 1
     totalC = int(howManyCombinations(n, r))
+    logging.info("No. of combinations: N = %d, R = %d, Total = %d." % (n, r, totalC))
+
     retSet = combine(s, n, r, 0, originalString, originalStringLength, allWords, args)
 
     logging.info("No. of combinations: N = %d, R = %d, Total = %d. Actual iterations done = %d" % (n, r, totalC, args.combineIterator))
@@ -314,6 +332,9 @@ def genCombinationsEx4(originalString, originalStringLength, allWords, n, args):
         #args.fileOutput.write("(C.py) Total time taken to form sentences with (r=%d, n=%d) = %s (H:M:S.Millis)\n" % (iLen, n, elapsed))
 
         jStats[iLen] = { "timeSpent": elapsed }
+
+        if(areWeOutOfTime(args)):
+            break
 
     logSentences(retSet, False, args)
 

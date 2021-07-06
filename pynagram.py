@@ -251,7 +251,7 @@ def logToFileEx(jsonObject, origString, alteredString, allWords, sentences):
             sentJ.append({ len(sentences[ss]) : currentS })
             currentS = []
 
-        jsonObject["sentences"] = { "total": len(sentences), "listing" : sentJ }
+        jsonObject["sentences"] = { "total": len(sentences), "outOfTime": args.outOfTimeSentences, "listing" : sentJ }
     # ----------------------------------------------------
 
 
@@ -267,6 +267,7 @@ if(args.stopAfter > 30):
 args.stopAfterTheseManySeconds = timedelta(seconds=args.stopAfter)
 logging.info("Max time allowed to run = " + str(args.stopAfterTheseManySeconds) + " seconds.")
 args.outOfTime = False
+args.outOfTimeSentences = False
 
 initDictionary(args);
 prepareWordList();
@@ -301,9 +302,9 @@ args.allWordsArray = flattenWords(args.words, args)
 #logToFile(args.fileOutput, None, None, args.allWordsArray, None)
 logToFileEx(logJsonToFile, None, None, args.allWordsArray, None)
 
-# commenting for performance reason args.sentences = genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
+args.sentences = genCombinationsEx4(args.nstring, len(args.nstring), args.allWordsArray, len(args.allWordsArray), args)
 #logToFile(args.fileOutput, None, None, None, args.sentences)
-# commenting for performance reason logToFileEx(logJsonToFile, None, None, None, args.sentences)
+logToFileEx(logJsonToFile, None, None, None, args.sentences)
 
 logJsonToFile["stats"] = args.logJsonToFileStats
   

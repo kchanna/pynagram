@@ -20,6 +20,7 @@ parser.add_argument('--dict', type=str, default="brown", help='[Optional] The di
 parser.add_argument('--wordCount', type=str, default="4,5", help='[Optional] The number of words to use in a sentence.')
 parser.add_argument('--outFile', type=str, help='[Optional] The path where the output file is written.')
 parser.add_argument('--timeout', type=int, default="20", help='[Optional] Stop processing after these many seconds.')
+parser.add_argument('--sessionId', type=str, default="unknown", help='[Optional] Session ID for this query.')
 #parser.add_argument('-h', '--help', help='[Optional] Show options and exit', required=False)
 
 
@@ -217,7 +218,12 @@ def logToFileEx(jsonObject, origString, alteredString, allWords, sentences):
     if (None != alteredString):
         inc = { "string" : alteredString, "length" : len(alteredString) }
 
-        jsonObject["input"] = { "dictionary" : getCurrentDictionary(), "incoming" : incJ, "altered" : inc, "maxTimeAllowedToRun": args.stopAfter }
+        jsonObject["input"] = { 
+            "session": args.sessionId,
+            "dictionary" : getCurrentDictionary(), 
+            "incoming" : incJ, 
+            "altered" : inc, 
+            "maxTimeAllowedToRun": args.stopAfter }
 
     if(None != allWords):
         wordJ = { "total" : len(allWords), "outOfTime": args.outOfTime }
